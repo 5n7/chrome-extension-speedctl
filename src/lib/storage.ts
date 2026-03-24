@@ -23,9 +23,9 @@ export async function setStorageArea(newArea: StorageArea): Promise<void> {
 	if (currentArea === newArea) return;
 
 	const config = await loadConfig();
-	await getStorageArea(currentArea).remove(STORAGE_KEY);
-	await chrome.storage.local.set({ [STORAGE_AREA_KEY]: newArea });
 	await getStorageArea(newArea).set({ [STORAGE_KEY]: config });
+	await chrome.storage.local.set({ [STORAGE_AREA_KEY]: newArea });
+	await getStorageArea(currentArea).remove(STORAGE_KEY);
 }
 
 export async function loadConfig(): Promise<SpeedctlConfig> {
@@ -45,7 +45,10 @@ export async function saveConfig(config: SpeedctlConfig): Promise<void> {
 }
 
 export function onConfigChanged(callback: (config: SpeedctlConfig) => void): () => void {
-	const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+	const listener = async (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+		const currentArea = await loadStorageArea();
+		if (areaName !== currentArea) return;
+
 		const newValue = changes[STORAGE_KEY]?.newValue;
 		if (isSpeedctlConfig(newValue)) {
 			callback({

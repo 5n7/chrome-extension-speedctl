@@ -12,6 +12,8 @@ interface Props {
 
 type RecordingField = "speedDown" | "speedUp" | null;
 
+const BLOCKED_KEYS = new Set(["Alt", "CapsLock", "Control", "Meta", "Shift", "Tab"]);
+
 function displayKey(key: string): string {
 	if (key === " ") return "Space";
 	if (key === "ArrowUp") return "\u2191";
@@ -37,6 +39,7 @@ export function ShortcutKeysSection({ keys, onChange }: Props) {
 				recordingRef.current = null;
 				return;
 			}
+			if (BLOCKED_KEYS.has(e.key)) return;
 
 			onChange({ ...keys, [recordingRef.current]: e.key });
 			setRecording(null);

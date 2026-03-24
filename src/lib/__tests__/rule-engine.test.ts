@@ -1,13 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_CONFIG } from "../constants";
 import { evaluateRules } from "../rule-engine";
 import type { SpeedctlConfig, VideoContext } from "../types";
 
-const baseConfig: SpeedctlConfig = {
-	channelRules: [],
-	defaultSpeed: 1.0,
-	regexRules: [],
-};
+const baseConfig: SpeedctlConfig = DEFAULT_CONFIG;
 
 function ctx(title: string | null = null, channelName: string | null = null): VideoContext {
 	return { channelName, title };
@@ -102,8 +99,8 @@ describe("evaluateRules", () => {
 	describe("priority", () => {
 		it("regex takes priority over channel", () => {
 			const config: SpeedctlConfig = {
+				...baseConfig,
 				channelRules: [{ channelName: "MyChannel", id: "1", speed: 2.0 }],
-				defaultSpeed: 1.0,
 				regexRules: [{ id: "2", pattern: "ASMR", speed: 0.5 }],
 			};
 			expect(evaluateRules(ctx("ASMR video", "MyChannel"), config)).toBe(0.5);
@@ -111,17 +108,17 @@ describe("evaluateRules", () => {
 
 		it("channel takes priority over default", () => {
 			const config: SpeedctlConfig = {
+				...baseConfig,
 				channelRules: [{ channelName: "MyChannel", id: "1", speed: 2.5 }],
-				defaultSpeed: 1.0,
-				regexRules: [],
 			};
 			expect(evaluateRules(ctx("video", "MyChannel"), config)).toBe(2.5);
 		});
 
 		it("falls through regex → channel → default", () => {
 			const config: SpeedctlConfig = {
-				channelRules: [{ channelName: "Other", id: "1", speed: 2.0 }],
+				...baseConfig,
 				defaultSpeed: 3.0,
+				channelRules: [{ channelName: "Other", id: "1", speed: 2.0 }],
 				regexRules: [{ id: "2", pattern: "nomatch", speed: 0.5 }],
 			};
 			expect(evaluateRules(ctx("video", "Unknown"), config)).toBe(3.0);

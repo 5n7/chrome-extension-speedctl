@@ -128,7 +128,9 @@ export function RegexRulesSection({ rules, onChange }: Props) {
 									onDragEnd={handleDragEnd}
 									className={dropTargetId === rule.id ? "border-t-2 border-t-primary" : ""}
 								>
-									<TableCell className="cursor-grab px-2 text-muted-foreground">⠿</TableCell>
+									<TableCell className="cursor-grab px-2 text-muted-foreground" aria-label="Drag to reorder" role="img">
+										⠿
+									</TableCell>
 									<TableCell>
 										<div className="space-y-1">
 											<Input
