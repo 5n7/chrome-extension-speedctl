@@ -1,19 +1,41 @@
-import { DEFAULT_CONFIG, STORAGE_KEY } from "./constants";
-import type { SpeedctlConfig } from "./types";
+import { DEFAULT_CONFIG, DEFAULT_STORAGE_AREA, STORAGE_AREA_KEY, STORAGE_KEY } from "./constants";
+import type { SpeedctlConfig, StorageArea } from "./types";
 import { isSpeedctlConfig } from "./types";
 
+function getStorageArea(area: StorageArea): chrome.storage.StorageArea {
+	return area === "sync" ? chrome.storage.sync : chrome.storage.local;
+}
+
+export async function loadStorageArea(): Promise<StorageArea> {
+	const result = await chrome.storage.local.get(STORAGE_AREA_KEY);
+	const value = result[STORAGE_AREA_KEY];
+	return value === "sync" ? "sync" : DEFAULT_STORAGE_AREA;
+}
+
+export async function setStorageArea(newArea: StorageArea): Promise<void> {
+	const currentArea = await loadStorageArea();
+	if (currentArea === newArea) return;
+
+	const config = await loadConfig();
+	await getStorageArea(currentArea).remove(STORAGE_KEY);
+	await chrome.storage.local.set({ [STORAGE_AREA_KEY]: newArea });
+	await getStorageArea(newArea).set({ [STORAGE_KEY]: config });
+}
+
 export async function loadConfig(): Promise<SpeedctlConfig> {
-	const result = await chrome.storage.local.get(STORAGE_KEY);
+	const area = await loadStorageArea();
+	const result = await getStorageArea(area).get(STORAGE_KEY);
 	const data = result[STORAGE_KEY];
 	return isSpeedctlConfig(data) ? data : DEFAULT_CONFIG;
 }
 
 export async function saveConfig(config: SpeedctlConfig): Promise<void> {
-	await chrome.storage.local.set({ [STORAGE_KEY]: config });
+	const area = await loadStorageArea();
+	await getStorageArea(area).set({ [STORAGE_KEY]: config });
 }
 
 export function onConfigChanged(callback: (config: SpeedctlConfig) => void): () => void {
-	const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+	const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
 		const newValue = changes[STORAGE_KEY]?.newValue;
 		if (isSpeedctlConfig(newValue)) {
 			callback(newValue);

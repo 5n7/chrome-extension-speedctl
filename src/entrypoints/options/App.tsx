@@ -1,24 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Separator } from "@/components/ui/separator";
-import { DEFAULT_CONFIG } from "@/lib/constants";
-import { loadConfig, saveConfig } from "@/lib/storage";
-import type { SpeedctlConfig } from "@/lib/types";
+import { DEFAULT_CONFIG, DEFAULT_STORAGE_AREA } from "@/lib/constants";
+import { loadConfig, loadStorageArea, saveConfig, setStorageArea } from "@/lib/storage";
+import type { SpeedctlConfig, StorageArea } from "@/lib/types";
 
 import { ChannelRulesSection } from "./components/ChannelRulesSection";
 import { DefaultSpeedSection } from "./components/DefaultSpeedSection";
 import { RegexRulesSection } from "./components/RegexRulesSection";
+import { StorageAreaSection } from "./components/StorageAreaSection";
 
 export default function App() {
 	const [config, setConfig] = useState<SpeedctlConfig>(DEFAULT_CONFIG);
+	const [storageArea, setStorageAreaState] = useState<StorageArea>(DEFAULT_STORAGE_AREA);
 	const [loaded, setLoaded] = useState(false);
 	const [saveCount, setSaveCount] = useState(0);
 	const [showSaved, setShowSaved] = useState(false);
 	const isInitialLoad = useRef(true);
 
 	useEffect(() => {
-		loadConfig().then((c) => {
+		Promise.all([loadConfig(), loadStorageArea()]).then(([c, area]) => {
 			setConfig(c);
+			setStorageAreaState(area);
 			setLoaded(true);
 		});
 	}, []);
@@ -41,6 +44,12 @@ export default function App() {
 
 	const updateConfig = useCallback((updater: (prev: SpeedctlConfig) => SpeedctlConfig) => {
 		setConfig((prev) => updater(prev));
+		setSaveCount((c) => c + 1);
+	}, []);
+
+	const handleStorageAreaChange = useCallback(async (area: StorageArea) => {
+		await setStorageArea(area);
+		setStorageAreaState(area);
 		setSaveCount((c) => c + 1);
 	}, []);
 
@@ -67,6 +76,7 @@ export default function App() {
 					rules={config.regexRules}
 					onChange={(rules) => updateConfig((c) => ({ ...c, regexRules: rules }))}
 				/>
+				<StorageAreaSection area={storageArea} onChange={handleStorageAreaChange} />
 			</div>
 		</div>
 	);

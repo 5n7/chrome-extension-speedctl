@@ -1,5 +1,7 @@
 export type Speed = 0.5 | 1.0 | 1.5 | 2.0 | 2.5 | 3.0;
 
+export type StorageArea = "local" | "sync";
+
 export interface VideoContext {
 	title: string | null;
 	channelName: string | null;
