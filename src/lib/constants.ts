@@ -9,10 +9,12 @@ export const DEFAULT_SHORTCUT_KEYS: ShortcutKeys = {
 	speedDown: "s",
 	speedUp: "d",
 };
+
+export const DEFAULT_STORAGE_AREA: StorageArea = "local";
+
 export const DEFAULT_CONFIG: SpeedctlConfig = {
 	defaultSpeed: 1.0,
 	channelRules: [],
 	regexRules: [],
 	shortcutKeys: DEFAULT_SHORTCUT_KEYS,
 };
-export const DEFAULT_STORAGE_AREA: StorageArea = "local";

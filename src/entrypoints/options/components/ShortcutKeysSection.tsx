@@ -10,6 +10,8 @@ interface Props {
 	onChange: (keys: ShortcutKeys) => void;
 }
 
+type RecordingField = "speedDown" | "speedUp" | null;
+
 function displayKey(key: string): string {
 	if (key === " ") return "Space";
 	if (key === "ArrowUp") return "\u2191";
@@ -18,8 +20,6 @@ function displayKey(key: string): string {
 	if (key === "ArrowRight") return "\u2192";
 	return key.length === 1 ? key.toUpperCase() : key;
 }
-
-type RecordingField = "speedDown" | "speedUp" | null;
 
 export function ShortcutKeysSection({ keys, onChange }: Props) {
 	const [recording, setRecording] = useState<RecordingField>(null);

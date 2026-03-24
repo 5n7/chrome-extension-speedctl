@@ -48,22 +48,6 @@ export class SpeedController {
 		this.globalCleanups = [];
 	}
 
-	private rebindShortcuts(): void {
-		if (this.shortcutCleanup) {
-			this.shortcutCleanup();
-			this.shortcutCleanup = null;
-		}
-
-		const video = this.adapter.getVideoElement();
-		if (!video || !this.config) return;
-
-		this.shortcutCleanup = setupShortcuts(
-			this.config.shortcutKeys,
-			() => this.currentSpeed,
-			(speed) => this.setSpeed(video, speed),
-		);
-	}
-
 	private async onNavigate(): Promise<void> {
 		const navId = ++this.navigationId;
 		this.cleanupSetup();
@@ -110,6 +94,22 @@ export class SpeedController {
 				return;
 			}
 		}
+	}
+
+	private rebindShortcuts(): void {
+		if (this.shortcutCleanup) {
+			this.shortcutCleanup();
+			this.shortcutCleanup = null;
+		}
+
+		const video = this.adapter.getVideoElement();
+		if (!video || !this.config) return;
+
+		this.shortcutCleanup = setupShortcuts(
+			this.config.shortcutKeys,
+			() => this.currentSpeed,
+			(speed) => this.setSpeed(video, speed),
+		);
 	}
 
 	private applyRules(): void {
