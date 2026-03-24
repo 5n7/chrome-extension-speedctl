@@ -16,6 +16,7 @@ export class SpeedController {
 	private navigationId = 0;
 	private rateChangeTimer: ReturnType<typeof setTimeout> | null = null;
 	private setupCleanups: (() => void)[] = [];
+	private shortcutCleanup: (() => void) | null = null;
 
 	constructor(adapter: SiteAdapter) {
 		this.adapter = adapter;
@@ -27,6 +28,7 @@ export class SpeedController {
 		this.globalCleanups.push(
 			onConfigChanged((config) => {
 				this.config = config;
+				this.rebindShortcuts();
 				this.applyRules();
 			}),
 		);
@@ -38,8 +40,28 @@ export class SpeedController {
 
 	destroy(): void {
 		this.cleanupSetup();
+		if (this.shortcutCleanup) {
+			this.shortcutCleanup();
+			this.shortcutCleanup = null;
+		}
 		for (const fn of this.globalCleanups) fn();
 		this.globalCleanups = [];
+	}
+
+	private rebindShortcuts(): void {
+		if (this.shortcutCleanup) {
+			this.shortcutCleanup();
+			this.shortcutCleanup = null;
+		}
+
+		const video = this.adapter.getVideoElement();
+		if (!video || !this.config) return;
+
+		this.shortcutCleanup = setupShortcuts(
+			this.config.shortcutKeys,
+			() => this.currentSpeed,
+			(speed) => this.setSpeed(video, speed),
+		);
 	}
 
 	private async onNavigate(): Promise<void> {
@@ -67,12 +89,7 @@ export class SpeedController {
 		video.addEventListener("ratechange", rateHandler);
 		this.setupCleanups.push(() => video.removeEventListener("ratechange", rateHandler));
 
-		this.setupCleanups.push(
-			setupShortcuts(
-				() => this.currentSpeed,
-				(speed) => this.setSpeed(video, speed),
-			),
-		);
+		this.rebindShortcuts();
 
 		// Apply default speed immediately, then wait for metadata to update
 		if (this.config) {

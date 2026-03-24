@@ -1,5 +1,5 @@
 import { SPEED_STEPS } from "../../lib/constants";
-import type { Speed } from "../../lib/types";
+import type { ShortcutKeys, Speed } from "../../lib/types";
 
 function isInputFocused(): boolean {
 	const el = document.activeElement;
@@ -8,7 +8,11 @@ function isInputFocused(): boolean {
 	return tag === "input" || tag === "textarea" || (el as HTMLElement).isContentEditable;
 }
 
-export function setupShortcuts(getCurrentSpeed: () => Speed, setSpeed: (speed: Speed) => void): () => void {
+export function setupShortcuts(
+	keys: ShortcutKeys,
+	getCurrentSpeed: () => Speed,
+	setSpeed: (speed: Speed) => void,
+): () => void {
 	const handler = (e: KeyboardEvent) => {
 		if (isInputFocused()) return;
 
@@ -16,9 +20,9 @@ export function setupShortcuts(getCurrentSpeed: () => Speed, setSpeed: (speed: S
 		const currentIndex = SPEED_STEPS.indexOf(currentSpeed);
 		if (currentIndex === -1) return;
 
-		if (e.key === "s" && currentIndex > 0) {
+		if (e.key === keys.speedDown && currentIndex > 0) {
 			setSpeed(SPEED_STEPS[currentIndex - 1]);
-		} else if (e.key === "d" && currentIndex < SPEED_STEPS.length - 1) {
+		} else if (e.key === keys.speedUp && currentIndex < SPEED_STEPS.length - 1) {
 			setSpeed(SPEED_STEPS[currentIndex + 1]);
 		}
 	};

@@ -1,4 +1,10 @@
-import { DEFAULT_CONFIG, DEFAULT_STORAGE_AREA, STORAGE_AREA_KEY, STORAGE_KEY } from "./constants";
+import {
+	DEFAULT_CONFIG,
+	DEFAULT_SHORTCUT_KEYS,
+	DEFAULT_STORAGE_AREA,
+	STORAGE_AREA_KEY,
+	STORAGE_KEY,
+} from "./constants";
 import type { SpeedctlConfig, StorageArea } from "./types";
 import { isSpeedctlConfig } from "./types";
 
@@ -26,7 +32,11 @@ export async function loadConfig(): Promise<SpeedctlConfig> {
 	const area = await loadStorageArea();
 	const result = await getStorageArea(area).get(STORAGE_KEY);
 	const data = result[STORAGE_KEY];
-	return isSpeedctlConfig(data) ? data : DEFAULT_CONFIG;
+	if (!isSpeedctlConfig(data)) return DEFAULT_CONFIG;
+	return {
+		...data,
+		shortcutKeys: data.shortcutKeys ?? DEFAULT_SHORTCUT_KEYS,
+	};
 }
 
 export async function saveConfig(config: SpeedctlConfig): Promise<void> {
@@ -38,7 +48,10 @@ export function onConfigChanged(callback: (config: SpeedctlConfig) => void): () 
 	const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
 		const newValue = changes[STORAGE_KEY]?.newValue;
 		if (isSpeedctlConfig(newValue)) {
-			callback(newValue);
+			callback({
+				...newValue,
+				shortcutKeys: newValue.shortcutKeys ?? DEFAULT_SHORTCUT_KEYS,
+			});
 		}
 	};
 	chrome.storage.onChanged.addListener(listener);

@@ -8,6 +8,7 @@ import type { SpeedctlConfig, StorageArea } from "@/lib/types";
 import { ChannelRulesSection } from "./components/ChannelRulesSection";
 import { DefaultSpeedSection } from "./components/DefaultSpeedSection";
 import { RegexRulesSection } from "./components/RegexRulesSection";
+import { ShortcutKeysSection } from "./components/ShortcutKeysSection";
 import { StorageAreaSection } from "./components/StorageAreaSection";
 
 export default function App() {
@@ -75,6 +76,10 @@ export default function App() {
 				<RegexRulesSection
 					rules={config.regexRules}
 					onChange={(rules) => updateConfig((c) => ({ ...c, regexRules: rules }))}
+				/>
+				<ShortcutKeysSection
+					keys={config.shortcutKeys}
+					onChange={(shortcutKeys) => updateConfig((c) => ({ ...c, shortcutKeys }))}
 				/>
 				<StorageAreaSection area={storageArea} onChange={handleStorageAreaChange} />
 			</div>
