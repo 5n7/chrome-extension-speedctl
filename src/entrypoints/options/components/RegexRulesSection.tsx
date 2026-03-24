@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import type { DragEvent } from "react";
 
 import { SpeedSelect } from "@/components/SpeedSelect";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -25,6 +26,8 @@ function isValidRegex(pattern: string): boolean {
 export function RegexRulesSection({ rules, onChange }: Props) {
 	const [errors, setErrors] = useState<Record<string, boolean>>({});
 	const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+	const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+	const dragSourceId = useRef<string | null>(null);
 
 	const addRule = () => {
 		onChange([...rules, { id: crypto.randomUUID(), pattern: "", speed: 1.0 }]);
@@ -48,12 +51,52 @@ export function RegexRulesSection({ rules, onChange }: Props) {
 		});
 	};
 
+	const handleDragStart = (e: DragEvent, id: string) => {
+		dragSourceId.current = id;
+		e.dataTransfer.effectAllowed = "move";
+	};
+
+	const handleDragOver = (e: DragEvent, id: string) => {
+		e.preventDefault();
+		e.dataTransfer.dropEffect = "move";
+		if (dragSourceId.current !== id) {
+			setDropTargetId(id);
+		}
+	};
+
+	const handleDragLeave = () => {
+		setDropTargetId(null);
+	};
+
+	const handleDrop = (e: DragEvent, targetId: string) => {
+		e.preventDefault();
+		setDropTargetId(null);
+
+		const sourceId = dragSourceId.current;
+		if (!sourceId || sourceId === targetId) return;
+
+		const fromIndex = rules.findIndex((r) => r.id === sourceId);
+		const toIndex = rules.findIndex((r) => r.id === targetId);
+		if (fromIndex === -1 || toIndex === -1) return;
+
+		const reordered = [...rules];
+		const [moved] = reordered.splice(fromIndex, 1);
+		reordered.splice(toIndex, 0, moved);
+		onChange(reordered);
+	};
+
+	const handleDragEnd = () => {
+		dragSourceId.current = null;
+		setDropTargetId(null);
+	};
+
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Title Regex Rules</CardTitle>
 				<CardDescription>
 					Set playback speed based on video title patterns (regex). Rules are evaluated in order — first match wins.
+					Drag to reorder.
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-4">
@@ -67,6 +110,7 @@ export function RegexRulesSection({ rules, onChange }: Props) {
 					<Table>
 						<TableHeader>
 							<TableRow>
+								<TableHead className="w-8" />
 								<TableHead>Regex Pattern</TableHead>
 								<TableHead className="w-32">Speed</TableHead>
 								<TableHead className="w-24" />
@@ -74,7 +118,17 @@ export function RegexRulesSection({ rules, onChange }: Props) {
 						</TableHeader>
 						<TableBody>
 							{rules.map((rule) => (
-								<TableRow key={rule.id}>
+								<TableRow
+									key={rule.id}
+									draggable
+									onDragStart={(e) => handleDragStart(e, rule.id)}
+									onDragOver={(e) => handleDragOver(e, rule.id)}
+									onDragLeave={handleDragLeave}
+									onDrop={(e) => handleDrop(e, rule.id)}
+									onDragEnd={handleDragEnd}
+									className={dropTargetId === rule.id ? "border-t-2 border-t-primary" : ""}
+								>
+									<TableCell className="cursor-grab px-2 text-muted-foreground">⠿</TableCell>
 									<TableCell>
 										<div className="space-y-1">
 											<Input
